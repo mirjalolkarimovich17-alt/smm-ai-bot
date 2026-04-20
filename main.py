@@ -181,29 +181,21 @@ async def ai_chat_handler(message: types.Message, state: FSMContext):
     
     wait_msg = await message.answer("⏳ O'ylayapman...")
     
-    instruction = (
-        f"Siz Abdulning SMM botida yordamchisiz. Bot xizmatlari: Instagram, Telegram obunachilari. "
-        f"Botda balansni 'Hisob to'ldirish' tugmasi orqali to'ldirish mumkin. Admin {ADMIN_USER} tasdiqlashi kerak. "
-        f"Referal tizimi: har bir do'st uchun {REFERAL_BONUS} so'm bonus beriladi. "
-        "Faqat shu bot va SMM bo'yicha juda qisqa va aniq javob bering."
-    )
-    
     try:
-        safety = [
-            {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
-            {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"},
-            {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE"},
-            {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"},
-        ]
+        # AI ga ko'rsatma
+        full_prompt = f"Siz Abdulning SMM botida yordamchisiz. Savol: {message.text}"
         
-        response = ai_model.generate_content(
-            f"{instruction}\n\nMijoz savoli: {message.text}",
-            safety_settings=safety
-        )
-        await wait_msg.edit_text(response.text if response.text else "AI javob bera olmadi.")
+        # Javob olish
+        response = ai_model.generate_content(full_prompt)
+        
+        if response and response.text:
+            await wait_msg.edit_text(response.text)
+        else:
+            await wait_msg.edit_text("⚠️ AI bo'sh javob qaytardi (Xavfsizlik filtri bo'lishi mumkin).")
+            
     except Exception as e:
-        print(f"AI Xatosi: {e}")
-        await wait_msg.edit_text("⚠️ AI tizimi hozircha band yoki hududiy cheklov bor. Birozdan so'ng urinib ko'ring.")
+        print(f"AI ERROR: {e}") # Bu Render Logs-da ko'rinadi
+        await wait_msg.edit_text(f"⚠️ Xatolik yuz berdi. Server loglarini tekshiring.")
 
 # --- 8. HISOB, ADMIN VA REFERAL ---
 @dp.message(F.text == "💰 Mening hisobim")
